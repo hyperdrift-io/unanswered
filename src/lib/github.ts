@@ -70,7 +70,7 @@ export function warmCache(): void {
   COMMON.forEach((lang, i) => {
     setTimeout(() => {
       searchUnanswered(lang, 10).catch(() => undefined);
-    }, 1500 + i * 4000);
+    }, 1500 + i * 8000);
   });
 }
 

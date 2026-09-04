@@ -18,7 +18,7 @@ export function AskFinder() {
       try {
         setResult(await findUnansweredAsks(whatYouKnow));
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Something went wrong');
+        setError('Our scan hit a snag. Try again in a moment.');
       }
     });
   }
@@ -41,9 +41,9 @@ export function AskFinder() {
         </button>
       </form>
 
-      {error && <p role="alert">{error}</p>}
+      {(error ?? result?.error) && <p role="alert">{error ?? result?.error}</p>}
 
-      {result && (
+      {result && !result.error && (
         <section aria-live="polite">
           <p>
             {result.asks.length === 0
