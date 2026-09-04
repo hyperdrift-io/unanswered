@@ -18,7 +18,8 @@ export async function findAsks(whatYouKnow: string, max = 5): Promise<Search> {
   if (known.length < 3) return { whatYouKnow: known, languages: [], considered: 0, asks: [] };
 
   const languages = await languagesFor(known);
-  const batches = await Promise.all(languages.map((l) => searchUnanswered(l, 10)));
+  const batches: Candidate[][] = [];
+  for (const l of languages) batches.push(await searchUnanswered(l, 10));
   const candidates = dedupe(batches.flat()).sort((a, b) => b.daysUnanswered - a.daysUnanswered);
   if (candidates.length === 0) return { whatYouKnow: known, languages, considered: 0, asks: [] };
 

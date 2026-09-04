@@ -1,6 +1,8 @@
 // GitHub Search: open issues where a maintainer asked for help and nobody replied.
-// One search per language, cached for ten minutes — GitHub's secondary rate limit
-// trips on bursts of three, so the cache is not an optimisation, it is the design.
+// One search per language, never concurrent, cached for half an hour, and warmed for
+// the common languages at boot — GitHub's secondary rate limit trips on a burst of
+// three or on two concurrent searches, so the cache is not an optimisation, it is
+// the design.
 
 export type Candidate = {
   id: number;
@@ -17,7 +19,8 @@ export type Candidate = {
 };
 
 const API = 'https://api.github.com';
-const TTL_MS = 10 * 60 * 1000;
+const TTL_MS = 30 * 60 * 1000;
+const MIN_STARS = 100;
 const cache = new Map<string, { at: number; items: Candidate[] }>();
 
 const daysSince = (iso: string) =>
@@ -36,7 +39,7 @@ export function buildQuery(language: string): string {
     'comments:0',
     `created:${isoDaysAgo(365)}..${isoDaysAgo(21)}`,
     `language:${JSON.stringify(language)}`,
-    'stars:>20',
+    `stars:>${MIN_STARS}`,
   ].join(' ');
 }
 
@@ -51,6 +54,25 @@ type SearchItem = {
   user: { login: string };
   created_at: string;
 };
+
+// GitHub counts concurrent search calls against the secondary limit: one at a time.
+let chain: Promise<unknown> = Promise.resolve();
+function withLock<T>(fn: () => Promise<T>): Promise<T> {
+  const run = chain.then(fn, fn);
+  chain = run.catch(() => undefined);
+  return run;
+}
+
+const COMMON = ['TypeScript', 'JavaScript', 'Python', 'Go', 'Rust', 'Java', 'C#', 'Ruby'];
+
+/** Fill the cache for the languages most people name, one search every few seconds. */
+export function warmCache(): void {
+  COMMON.forEach((lang, i) => {
+    setTimeout(() => {
+      searchUnanswered(lang, 10).catch(() => undefined);
+    }, 1500 + i * 4000);
+  });
+}
 
 export async function searchUnanswered(language: string, limit = 12): Promise<Candidate[]> {
   const key = language.toLowerCase();
@@ -71,7 +93,11 @@ export async function searchUnanswered(language: string, limit = 12): Promise<Ca
   const token = process.env.GITHUB_TOKEN;
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const res = await fetch(`${API}/search/issues?${params}`, { headers });
+  const res = await withLock(() => fetch(`${API}/search/issues?${params}`, { headers }));
+  if (res.status === 403 || res.status === 429) {
+    if (hit) return hit.items.slice(0, limit); // stale beats nothing
+    throw new Error('GitHub is rate-limiting our scan for a minute. Try again shortly.');
+  }
   if (!res.ok) {
     throw new Error(`GitHub search ${res.status}: ${(await res.text()).slice(0, 200)}`);
   }

@@ -14,7 +14,7 @@ Built in a weekend for the [DEV Weekend Challenge: Generosity Edition](https://d
 ## What it does
 
 1. GitHub search: open `help wanted` issues, no assignee, zero comments, three
-   weeks to a year old, on repos with more than twenty stars, in the languages
+   weeks to a year old, on repos with more than a hundred stars, in the languages
    you named.
 2. Gemini (`gemini-3.6-flash`) turns your line into search languages, picks the
    asks you could genuinely move forward, and says why in one sentence.

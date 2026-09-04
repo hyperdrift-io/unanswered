@@ -66,7 +66,7 @@ Below are open-source issues where a maintainer labelled the issue "help wanted"
 
 For each pick write:
 - whyYou: one sentence, second person, naming the specific skill of theirs that fits. No flattery.
-- reply: the first comment they would post on the issue. 40 to 110 words. Plain, warm, human. Open by acknowledging the specific ask. Offer one concrete first step (a question that unblocks, a pointer, or a small piece they can do this week). Never promise to do the whole thing. No emoji, no "I'd love to", no "not just X but Y", no bullet lists. It must read as if written by a person who read the issue, not by an assistant.
+- reply: the first comment they would post on the issue. 40 to 110 words. Plain, warm, human. Open by acknowledging the specific ask. Offer one concrete first step (a question that unblocks, a pointer, or one small piece). Never promise the whole thing, a pull request, or a timeline: "this week", "I'll open a PR" and "once clarified" are out. No emoji, no "I'd love to", no "not just X but Y", no bullet lists. It must read as if written by a person who read the issue, not by an assistant.
 
 ${list}`,
     {
