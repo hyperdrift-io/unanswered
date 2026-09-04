@@ -48,7 +48,9 @@ export function AskFinder() {
           <p>
             {result.asks.length === 0
               ? 'Our scan found nothing you could take on right now. Try naming a language or two.'
-              : `${result.considered} unanswered asks in ${result.languages.join(' and ')}. These ${result.asks.length} are yours.`}
+              : `${result.considered} unanswered asks in ${result.languages.join(' and ')}. ${
+                  result.asks.length === 1 ? 'This one is yours.' : `These ${result.asks.length} are yours.`
+                }`}
           </p>
           {result.asks.map((ask) => (
             <article key={ask.id}>

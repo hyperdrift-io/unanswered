@@ -69,7 +69,7 @@ const COMMON = ['TypeScript', 'JavaScript', 'Python', 'Go', 'Rust', 'Java', 'C#'
 export function warmCache(): void {
   COMMON.forEach((lang, i) => {
     setTimeout(() => {
-      searchUnanswered(lang, 10).catch(() => undefined);
+      searchUnanswered(lang, 20).catch(() => undefined);
     }, 1500 + i * 8000);
   });
 }

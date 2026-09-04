@@ -23,7 +23,7 @@ export async function findAsks(whatYouKnow: string, max = 5): Promise<Search> {
   try {
     const languages = await languagesFor(known);
     const batches: Candidate[][] = [];
-    for (const l of languages) batches.push(await searchUnanswered(l, 10));
+    for (const l of languages) batches.push(await searchUnanswered(l, 20));
     const candidates = dedupe(batches.flat()).sort((a, b) => b.daysUnanswered - a.daysUnanswered);
     if (candidates.length === 0) return { ...empty, languages };
 
