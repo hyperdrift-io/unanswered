@@ -24,9 +24,14 @@ async function generateJson<T>(prompt: string, schema: Schema): Promise<T> {
   });
   if (!res.ok) throw new Error(`Gemini ${res.status}: ${(await res.text()).slice(0, 300)}`);
   const data = (await res.json()) as {
-    candidates?: { content?: { parts?: { text?: string }[] } }[];
+    candidates?: { content?: { parts?: { text?: string; thought?: boolean }[] } }[];
   };
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+  // Gemini 3.x may put a thought-signature part before the answer: join every non-thought text part.
+  const text = (data.candidates?.[0]?.content?.parts ?? [])
+    .filter((p) => !p.thought && typeof p.text === 'string')
+    .map((p) => p.text)
+    .join('');
+  if (!text) throw new Error('Gemini returned no text part');
   return JSON.parse(text) as T;
 }
 

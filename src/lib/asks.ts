@@ -36,13 +36,14 @@ export async function findAsks(whatYouKnow: string, max = 5): Promise<Search> {
     return { whatYouKnow: known, languages, considered: candidates.length, asks };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
+    console.error('[unanswered] scan failed:', message);
     return { ...empty, error: friendly(message) };
   }
 }
 
 function friendly(message: string): string {
   if (/rate-limit|403|429/.test(message)) return 'GitHub is rate-limiting our scan for a minute. Try again shortly.';
-  if (/Gemini/.test(message)) return 'Gemini did not answer this time. Try again in a moment.';
+  if (/gemini/i.test(message)) return 'Gemini did not answer this time. Try again in a moment.';
   return 'Our scan hit a snag. Try again in a moment.';
 }
 
