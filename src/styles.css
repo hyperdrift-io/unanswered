@@ -1,0 +1,162 @@
+/* unanswered — a letter on good paper.
+   Warm paper, ink type, one red thread for the thing that matters: the reply.
+   Primitives carry the design; the island adds state through attributes. */
+
+:root {
+  --paper: #f6f1e8;
+  --paper-2: #efe7d9;
+  --ink: #1d1a17;
+  --ink-2: #4a433c;
+  --muted: #8a8076;
+  --line: #d9cfbf;
+  --thread: #b8332b;
+  --thread-dim: rgba(184, 51, 43, 0.08);
+  --serif: "Newsreader", Georgia, "Times New Roman", serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --maxw: 42rem;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+::selection { background: var(--thread); color: var(--paper); }
+
+html { background: var(--paper); }
+body {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 1.15rem;
+  line-height: 1.55;
+  color: var(--ink);
+  background:
+    radial-gradient(90% 60% at 50% -10%, #fffaf1, transparent 70%),
+    var(--paper);
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+header, main, footer {
+  width: min(100% - 2.5rem, var(--maxw));
+  margin-inline: auto;
+}
+
+header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.4rem 0 0;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+header a { color: var(--ink); text-decoration: none; letter-spacing: 0.04em; }
+
+main { flex: 1; padding: 3.5rem 0 4rem; }
+
+h1 {
+  font-weight: 500;
+  font-size: clamp(2.2rem, 6vw, 3.4rem);
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  margin: 0 0 1.2rem;
+  max-width: 14ch;
+}
+h2 {
+  font-weight: 500;
+  font-size: 1.4rem;
+  margin: 0 0 0.6rem;
+}
+h3 { font-weight: 500; font-size: 1.15rem; margin: 0; }
+h3 small { color: var(--muted); font-weight: 400; }
+p { margin: 0 0 1rem; }
+p:last-child { margin-bottom: 0; }
+em { font-style: italic; color: var(--ink-2); }
+code { font-family: var(--mono); font-size: 0.85em; background: var(--paper-2); padding: 0.1em 0.35em; }
+a { color: var(--ink); text-decoration-color: var(--line); text-underline-offset: 0.2em; }
+a:hover { text-decoration-color: var(--thread); }
+ol { padding-left: 1.3rem; color: var(--ink-2); }
+ol li { margin-bottom: 0.5rem; }
+
+/* The form is the product. Zero classes. */
+form { margin: 2.2rem 0 2.6rem; }
+label { display: block; font-family: var(--mono); font-size: 0.82rem; color: var(--muted); margin-bottom: 0.5rem; }
+textarea {
+  width: 100%;
+  font: inherit;
+  color: var(--ink);
+  background: #fffdf8;
+  border: 1px solid var(--line);
+  border-bottom: 2px solid var(--ink);
+  padding: 0.9rem 1rem;
+  resize: vertical;
+  outline: none;
+}
+textarea:focus { border-bottom-color: var(--thread); }
+textarea::placeholder { color: var(--muted); font-style: italic; }
+
+button {
+  font: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+  padding: 0.65rem 1.2rem;
+  margin-top: 0.9rem;
+}
+button:hover { background: var(--thread); border-color: var(--thread); }
+button:disabled { opacity: 0.6; cursor: progress; }
+form[data-pending] textarea { border-bottom-color: var(--thread); }
+
+/* Secondary actions inside a result are the quiet variant. */
+button[value='copy'] {
+  background: transparent;
+  color: var(--ink);
+  margin: 0 0.8rem 0 0;
+  padding: 0.4rem 0.9rem;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+}
+button[value='copy'][aria-pressed='true'] { border-color: var(--thread); color: var(--thread); }
+
+[role='alert'] { color: var(--thread); font-family: var(--mono); font-size: 0.85rem; }
+
+/* Results read like a stack of letters. */
+section[aria-live] > p { font-family: var(--mono); font-size: 0.82rem; color: var(--muted); }
+article {
+  border-top: 1px solid var(--line);
+  padding: 1.6rem 0 1.8rem;
+}
+article > p { margin-bottom: 0.35rem; color: var(--ink-2); }
+article > p:has(time) { font-family: var(--mono); font-size: 0.78rem; color: var(--muted); }
+article > p + p:not(:has(time)) { margin-top: 0.9rem; color: var(--ink); }
+article a { font-size: 0.95rem; }
+blockquote {
+  margin: 1rem 0 0.9rem;
+  padding: 1rem 1.2rem;
+  background: var(--thread-dim);
+  border-left: 2px solid var(--thread);
+  white-space: pre-wrap;
+  font-size: 1.05rem;
+}
+
+section:not([aria-live]) { margin-top: 3rem; border-top: 1px solid var(--line); padding-top: 2rem; }
+
+footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.6rem 1.5rem;
+  padding: 1.2rem 0 1.8rem;
+  border-top: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+footer a { color: var(--ink-2); }
+
+@media (prefers-reduced-motion: no-preference) {
+  article { animation: settle 0.35s ease-out both; }
+  @keyframes settle { from { opacity: 0; transform: translateY(6px); } }
+}
