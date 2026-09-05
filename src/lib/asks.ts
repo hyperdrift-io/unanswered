@@ -43,7 +43,9 @@ export async function scanAsks(whatYouKnow: string): Promise<Scan> {
 // links, or an example chip, costs nothing and waits for nothing. This matters
 // because the free Gemini tier allows twenty requests a day.
 const TTL_MS = 24 * 60 * 60 * 1000;
-const picksCache = new Map<string, { at: number; asks: Ask[] }>();
+type PickEntry = { at: number; asks: Ask[] };
+const g = globalThis as typeof globalThis & { __unansweredPicks?: Map<string, PickEntry> };
+const picksCache: Map<string, PickEntry> = (g.__unansweredPicks ??= new Map());
 
 /** Step two: which of these asks this person can move forward, and the first reply for each. */
 export async function pickAsks(whatYouKnow: string, candidates: Candidate[], max = 5): Promise<Picks> {

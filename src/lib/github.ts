@@ -23,7 +23,11 @@ export type Candidate = {
 const API = 'https://api.github.com';
 const TTL_MS = 30 * 60 * 1000;
 const MAINTAINERS = new Set(['OWNER', 'MEMBER', 'COLLABORATOR']);
-const cache = new Map<string, { at: number; total: number; items: Candidate[] }>();
+type Entry = { at: number; total: number; items: Candidate[] };
+// Anchored on the process global: the page and the server functions may be bundled
+// as separate module instances, and there must be exactly one cache per process.
+const g = globalThis as typeof globalThis & { __unansweredSearch?: Map<string, Entry> };
+const cache: Map<string, Entry> = (g.__unansweredSearch ??= new Map());
 
 const daysSince = (iso: string) =>
   Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000));
