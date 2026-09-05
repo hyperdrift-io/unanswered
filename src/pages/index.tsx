@@ -1,9 +1,11 @@
 import { AskFinder } from '../components/ask-finder.tsx';
-import { unansweredTotals } from '../lib/github.ts';
+import { countUnanswered } from '../queries.ts';
 
 // Server-rendered shell with one live number; the finder is the only client island.
+// The count comes through the server-function module so it reads the cache the
+// scan fills, not a second copy bundled into this page.
 export default async function HomePage() {
-  const { total, languages } = unansweredTotals();
+  const { total, languages } = await countUnanswered();
   return (
     <>
       <title>unanswered — the maintainers who asked for help and got nothing</title>

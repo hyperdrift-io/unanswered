@@ -2,7 +2,7 @@
 
 import { scanAsks, pickAsks, warmExamples, type Scan, type Picks } from './lib/asks.ts';
 import type { Candidate } from './lib/github.ts';
-import { warmCache } from './lib/github.ts';
+import { warmCache, unansweredTotals } from './lib/github.ts';
 import { EXAMPLES } from './lib/examples.ts';
 
 // The server loads this module once: fill the caches before the first visitor asks.
@@ -18,4 +18,9 @@ export async function scanUnanswered(whatYouKnow: string): Promise<Scan> {
 
 export async function pickUnanswered(whatYouKnow: string, candidates: Candidate[]): Promise<Picks> {
   return pickAsks(whatYouKnow, candidates, 5);
+}
+
+/** The live number in the hero. Lives here so the page reads the same cache the scan fills. */
+export async function countUnanswered(): Promise<{ total: number; languages: number }> {
+  return unansweredTotals();
 }
