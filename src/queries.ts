@@ -1,13 +1,21 @@
 'use server';
 
-import { findAsks, type Search } from './lib/asks.ts';
+import { scanAsks, pickAsks, warmExamples, type Scan, type Picks } from './lib/asks.ts';
+import type { Candidate } from './lib/github.ts';
 import { warmCache } from './lib/github.ts';
+import { EXAMPLES } from './lib/examples.ts';
 
-// The server loads this module once: fill the cache before the first visitor asks.
+// The server loads this module once: fill the caches before the first visitor asks.
 warmCache();
+warmExamples(EXAMPLES);
 
-// The one server function the island calls. Its signature is the contract:
-// no API route, no client fetch library, the return type is the client's type.
-export async function findUnansweredAsks(whatYouKnow: string): Promise<Search> {
-  return findAsks(whatYouKnow, 5);
+// Two typed server functions the island calls in sequence. Their signatures are
+// the contract: no API route, no client fetch library, the return type is the
+// client's type. The scan answers in about a second; the picks take Gemini's time.
+export async function scanUnanswered(whatYouKnow: string): Promise<Scan> {
+  return scanAsks(whatYouKnow);
+}
+
+export async function pickUnanswered(whatYouKnow: string, candidates: Candidate[]): Promise<Picks> {
+  return pickAsks(whatYouKnow, candidates, 5);
 }

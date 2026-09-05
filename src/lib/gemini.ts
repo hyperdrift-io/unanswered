@@ -1,13 +1,29 @@
 // Gemini does two things here, and only two: turn "what I know" into search
-// languages, and choose the asks this person can actually answer — with a first
-// reply drafted in a voice that leaves the maintainer better off.
+// languages when the keyword map draws a blank, and choose the asks this person
+// can actually answer — saying what the maintainer wants in plain words, with a
+// first reply drafted in a voice that leaves them better off.
 
 const ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models';
 const MODEL = process.env.GEMINI_MODEL ?? 'gemini-3.6-flash';
 
 type Schema = Record<string, unknown>;
+type Thinking = 'minimal' | 'low' | 'medium' | 'high';
 
-async function generateJson<T>(prompt: string, schema: Schema): Promise<T> {
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/** One call, with a single retry on the transient 503 Gemini gives under load. A 429 is quota, not weather: fail fast. */
+async function generateJson<T>(prompt: string, schema: Schema, thinking: Thinking): Promise<T> {
+  try {
+    return await generateOnce<T>(prompt, schema, thinking);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : '';
+    if (!/^Gemini 503/.test(message)) throw err;
+    await sleep(2000);
+    return generateOnce<T>(prompt, schema, thinking);
+  }
+}
+
+async function generateOnce<T>(prompt: string, schema: Schema, thinking: Thinking): Promise<T> {
   const key = process.env.GEMINI_API_KEY;
   if (!key) throw new Error('GEMINI_API_KEY is not set');
   const res = await fetch(`${ENDPOINT}/${MODEL}:generateContent?key=${key}`, {
@@ -19,6 +35,7 @@ async function generateJson<T>(prompt: string, schema: Schema): Promise<T> {
         temperature: 0.4,
         responseMimeType: 'application/json',
         responseSchema: schema,
+        thinkingConfig: { thinkingLevel: thinking },
       },
     }),
   });
@@ -35,22 +52,23 @@ async function generateJson<T>(prompt: string, schema: Schema): Promise<T> {
   return JSON.parse(text) as T;
 }
 
-/** "React, a bit of Python, Postgres" → ["TypeScript", "Python"] (GitHub language names). */
+/** Fallback for text the keyword map cannot place: "I do embedded audio DSP" → ["C++", "C"]. */
 export async function languagesFor(whatYouKnow: string): Promise<string[]> {
   const out = await generateJson<{ languages: string[] }>(
     `Someone describes what they know: """${whatYouKnow.slice(0, 600)}"""
-Return the one or two GitHub *language* names (as GitHub's search uses them, e.g. "TypeScript", "Python", "Go", "Rust", "JavaScript", "C#", "Java", "Ruby", "PHP", "Swift", "Kotlin", "Shell", "CSS") where this person could most credibly answer an open-source issue. Frameworks map to their language (React, Vue, Node → TypeScript or JavaScript; Django → Python). If nothing maps, return ["JavaScript"].`,
+Return the one or two GitHub *language* names (as GitHub's search uses them, e.g. "TypeScript", "Python", "Go", "Rust", "JavaScript", "C#", "Java", "Ruby", "PHP", "Swift", "Kotlin", "Shell", "CSS") where this person could most credibly answer an open-source issue. Frameworks map to their language. If nothing maps, return ["JavaScript"].`,
     {
       type: 'object',
       properties: { languages: { type: 'array', items: { type: 'string' }, maxItems: 2 } },
       required: ['languages'],
     },
+    'minimal',
   );
   const langs = out.languages.map((l) => l.trim()).filter(Boolean).slice(0, 2);
   return langs.length ? langs : ['JavaScript'];
 }
 
-export type Pick = { id: number; whyYou: string; reply: string };
+export type Pick = { id: number; asking: string; whyYou: string; reply: string };
 
 export async function pickAndDraft(
   whatYouKnow: string,
@@ -67,9 +85,10 @@ export async function pickAndDraft(
   const out = await generateJson<{ picks: Pick[] }>(
     `A person wrote what they know: """${whatYouKnow.slice(0, 600)}"""
 
-Below are open-source issues where a maintainer labelled the issue "help wanted" and nobody has replied. Choose at most ${max} the person could genuinely move forward, best first. Skip anything that needs deep repo context they cannot have, anything that reads as spam, and anything ambiguous about what the maintainer actually wants.
+Below are open-source issues where a maintainer labelled the issue "help wanted" and nobody has replied. Choose at most ${max} the person could genuinely move forward, best first. Skip anything that needs deep repo context they cannot have, anything that reads as spam or machine-generated, and anything ambiguous about what the maintainer actually wants.
 
 For each pick write:
+- asking: one plain sentence saying what the maintainer actually wants done, as you would explain it to a friend. No jargon the issue did not use.
 - whyYou: one sentence, second person, naming the specific skill of theirs that fits. No flattery.
 - reply: the first comment they would post on the issue. 40 to 110 words. Plain, warm, human. Open by acknowledging the specific ask. Offer one concrete first step (a question that unblocks, a pointer, or one small piece). Never promise the whole thing, a pull request, or a timeline: "this week", "I'll open a PR" and "once clarified" are out. No emoji, no "I'd love to", no "not just X but Y", no bullet lists. It must read as if written by a person who read the issue, not by an assistant.
 
@@ -83,15 +102,17 @@ ${list}`,
             type: 'object',
             properties: {
               id: { type: 'integer' },
+              asking: { type: 'string' },
               whyYou: { type: 'string' },
               reply: { type: 'string' },
             },
-            required: ['id', 'whyYou', 'reply'],
+            required: ['id', 'asking', 'whyYou', 'reply'],
           },
         },
       },
       required: ['picks'],
     },
+    'low',
   );
   const known = new Set(candidates.map((c) => c.id));
   return out.picks.filter((p) => known.has(p.id)).slice(0, max);

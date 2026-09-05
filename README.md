@@ -14,13 +14,25 @@ Built in a weekend for the [DEV Weekend Challenge: Generosity Edition](https://d
 ## What it does
 
 1. GitHub search: open `help wanted` issues, no assignee, zero comments, three
-   weeks to a year old, on repos with more than a hundred stars, in the languages
-   you named.
-2. Gemini (`gemini-3.6-flash`) turns your line into search languages, picks the
-   asks you could genuinely move forward, and says why in one sentence.
-3. Gemini drafts the first comment: acknowledge the specific ask, offer one
-   concrete step, promise nothing you won't do.
+   weeks to a year old, most recently touched first, in the languages you
+   named. Only asks opened by the repo's owner, a member or a collaborator
+   count: "a maintainer asked" is literally true. One ask per repo, longest
+   wait first. (No `stars:` filter: issue search does not support it and
+   GitHub silently matches the number against the issue number instead. Every
+   result came back as issue #30 until we noticed.)
+2. Your words map to one or two GitHub languages with a keyword table. Gemini
+   (`gemini-3.6-flash`, minimal thinking, about a second) steps in only when the
+   table draws a blank.
+3. Gemini reads the asks, keeps the ones you could genuinely move, says what
+   each maintainer wants in plain words, why it is you, and drafts the first
+   comment: acknowledge the specific ask, offer one concrete step, promise
+   nothing you won't do.
 4. You read it, change it, post it. **Nothing is posted for you.**
+
+The page answers in two beats: the scan (GitHub, cached, about a second) shows
+how many maintainers asked and where; the picks follow when Gemini is done.
+The same words get the same picks for a day, so a shared link such as
+`/?know=Go+and+Kubernetes` lands on results instantly.
 
 ## Run it
 

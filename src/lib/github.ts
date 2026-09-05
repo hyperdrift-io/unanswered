@@ -14,14 +14,16 @@ export type Candidate = {
   labels: string[];
   language: string;
   author: string;
+  /** OWNER, MEMBER or COLLABORATOR: the ask came from someone who runs the repo. */
+  association: string;
   createdAt: string;
   daysUnanswered: number;
 };
 
 const API = 'https://api.github.com';
 const TTL_MS = 30 * 60 * 1000;
-const MIN_STARS = 100;
-const cache = new Map<string, { at: number; items: Candidate[] }>();
+const MAINTAINERS = new Set(['OWNER', 'MEMBER', 'COLLABORATOR']);
+const cache = new Map<string, { at: number; total: number; items: Candidate[] }>();
 
 const daysSince = (iso: string) =>
   Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000));
@@ -29,7 +31,13 @@ const daysSince = (iso: string) =>
 const isoDaysAgo = (days: number) =>
   new Date(Date.now() - days * 86_400_000).toISOString().slice(0, 10);
 
-/** The ask must be at least three weeks old (nobody came) and under a year old (the repo is likely alive). */
+/**
+ * The ask must be at least three weeks old (nobody came) and under a year old.
+ * No `stars:` qualifier: issue search does not support it, and GitHub silently
+ * matches the number against the issue number instead — every result comes back
+ * as issue #N. Repo quality comes from who asked (see isMaintainer) and from
+ * sorting by last update, so the repos are still alive.
+ */
 export function buildQuery(language: string): string {
   return [
     'label:"help wanted"',
@@ -39,9 +47,11 @@ export function buildQuery(language: string): string {
     'comments:0',
     `created:${isoDaysAgo(365)}..${isoDaysAgo(21)}`,
     `language:${JSON.stringify(language)}`,
-    `stars:>${MIN_STARS}`,
   ].join(' ');
 }
+
+/** Only asks from the people who run the repo count as "a maintainer asked". */
+export const isMaintainer = (association: string): boolean => MAINTAINERS.has(association);
 
 type SearchItem = {
   id: number;
@@ -52,6 +62,7 @@ type SearchItem = {
   repository_url: string;
   labels: { name: string }[];
   user: { login: string };
+  author_association: string;
   created_at: string;
 };
 
@@ -63,27 +74,38 @@ function withLock<T>(fn: () => Promise<T>): Promise<T> {
   return run;
 }
 
-const COMMON = ['TypeScript', 'JavaScript', 'Python', 'Go', 'Rust', 'Java', 'C#', 'Ruby'];
+export const COMMON = ['TypeScript', 'JavaScript', 'Python', 'Go', 'Rust', 'Java', 'C#', 'Ruby'];
 
 /** Fill the cache for the languages most people name, one search every few seconds. */
 export function warmCache(): void {
   COMMON.forEach((lang, i) => {
     setTimeout(() => {
-      searchUnanswered(lang, 20).catch(() => undefined);
+      searchUnanswered(lang).catch(() => undefined);
     }, 1500 + i * 8000);
   });
 }
 
-export async function searchUnanswered(language: string, limit = 12): Promise<Candidate[]> {
+/** What the cache knows right now: how many unanswered asks exist, across how many languages. */
+export function unansweredTotals(): { total: number; languages: number } {
+  let total = 0;
+  let languages = 0;
+  for (const entry of cache.values()) {
+    total += entry.total;
+    languages += 1;
+  }
+  return { total, languages };
+}
+
+export async function searchUnanswered(language: string, limit = 50): Promise<Candidate[]> {
   const key = language.toLowerCase();
   const hit = cache.get(key);
   if (hit && Date.now() - hit.at < TTL_MS) return hit.items.slice(0, limit);
 
   const params = new URLSearchParams({
     q: buildQuery(language),
-    sort: 'created',
-    order: 'desc',
-    per_page: String(Math.min(limit * 2, 30)),
+    sort: 'updated',
+    order: 'desc', // touched recently: the maintainer is still around
+    per_page: '50',
   });
   const headers: Record<string, string> = {
     Accept: 'application/vnd.github+json',
@@ -101,20 +123,23 @@ export async function searchUnanswered(language: string, limit = 12): Promise<Ca
   if (!res.ok) {
     throw new Error(`GitHub search ${res.status}: ${(await res.text()).slice(0, 200)}`);
   }
-  const data = (await res.json()) as { items: SearchItem[] };
-  const items = data.items.map<Candidate>((it) => ({
-    id: it.id,
-    repo: it.repository_url.replace(`${API}/repos/`, ''),
-    number: it.number,
-    title: it.title,
-    body: (it.body ?? '').slice(0, 1200),
-    url: it.html_url,
-    labels: it.labels.map((l) => l.name),
-    language,
-    author: it.user.login,
-    createdAt: it.created_at,
-    daysUnanswered: daysSince(it.created_at),
-  }));
-  cache.set(key, { at: Date.now(), items });
+  const data = (await res.json()) as { total_count: number; items: SearchItem[] };
+  const items = data.items
+    .filter((it) => isMaintainer(it.author_association))
+    .map<Candidate>((it) => ({
+      id: it.id,
+      repo: it.repository_url.replace(`${API}/repos/`, ''),
+      number: it.number,
+      title: it.title,
+      body: (it.body ?? '').slice(0, 1200),
+      url: it.html_url,
+      labels: it.labels.map((l) => l.name),
+      language,
+      author: it.user.login,
+      association: it.author_association,
+      createdAt: it.created_at,
+      daysUnanswered: daysSince(it.created_at),
+    }));
+  cache.set(key, { at: Date.now(), total: data.total_count, items });
   return items.slice(0, limit);
 }

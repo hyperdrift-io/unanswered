@@ -120,7 +120,31 @@ button[value='copy'] {
 }
 button[value='copy'][aria-pressed='true'] { border-color: var(--thread); color: var(--thread); }
 
+/* The example chips: quiet, one click, and they read like answers. */
+form > p { margin: 0.6rem 0 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
+form button[name='example'] {
+  margin: 0;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--ink-2);
+  background: transparent;
+  border-color: var(--line);
+}
+form button[name='example']:hover { color: var(--thread); border-color: var(--thread); background: transparent; }
+
 [role='alert'] { color: var(--thread); font-family: var(--mono); font-size: 0.85rem; }
+[role='status'] { font-family: var(--mono); font-size: 0.82rem; color: var(--muted); }
+[role='status']::after { content: ''; display: inline-block; width: 0.5em; height: 0.5em; margin-left: 0.5em; border-radius: 50%; background: var(--thread); animation: pulse 1s ease-in-out infinite; }
+
+/* The live number in the hero. */
+main > p > strong { font-weight: 500; color: var(--thread); font-variant-numeric: tabular-nums; }
+
+/* What they want / why you, as a small definition list. */
+dl { margin: 0.9rem 0 0; display: grid; grid-template-columns: max-content 1fr; gap: 0.25rem 1rem; }
+dt { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); padding-top: 0.25em; }
+dd { margin: 0; color: var(--ink); }
+@media (max-width: 30rem) { dl { grid-template-columns: 1fr; gap: 0; } dd { margin-bottom: 0.5rem; } }
 
 /* Results read like a stack of letters. */
 section[aria-live] > p { font-family: var(--mono); font-size: 0.82rem; color: var(--muted); }
@@ -130,7 +154,6 @@ article {
 }
 article > p { margin-bottom: 0.35rem; color: var(--ink-2); }
 article > p:has(time) { font-family: var(--mono); font-size: 0.78rem; color: var(--muted); }
-article > p + p:not(:has(time)) { margin-top: 0.9rem; color: var(--ink); }
 article a { font-size: 0.95rem; }
 blockquote {
   margin: 1rem 0 0.9rem;
@@ -159,4 +182,6 @@ footer a { color: var(--ink-2); }
 @media (prefers-reduced-motion: no-preference) {
   article { animation: settle 0.35s ease-out both; }
   @keyframes settle { from { opacity: 0; transform: translateY(6px); } }
+  @keyframes pulse { 50% { opacity: 0.2; } }
 }
+@media (prefers-reduced-motion: reduce) { [role='status']::after { animation: none; } }
