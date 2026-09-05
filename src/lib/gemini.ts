@@ -3,8 +3,27 @@
 // can actually answer — saying what the maintainer wants in plain words, with a
 // first reply drafted in a voice that leaves them better off.
 
-const ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models';
+import { accessToken, serviceAccount } from './google-auth.ts';
+
 const MODEL = process.env.GEMINI_MODEL ?? 'gemini-3.6-flash';
+
+// Two doors to the same model. Vertex AI (a service account on a billed project)
+// when the credentials are present; otherwise the Gemini API with a plain key,
+// which is the free tier and its twenty requests a day.
+async function endpoint(): Promise<{ url: string; headers: Record<string, string> }> {
+  const sa = serviceAccount();
+  const project = process.env.VERTEX_PROJECT ?? sa?.project_id;
+  if (sa && project) {
+    const location = process.env.VERTEX_LOCATION ?? 'global';
+    return {
+      url: `https://aiplatform.googleapis.com/v1/projects/${project}/locations/${location}/publishers/google/models/${MODEL}:generateContent`,
+      headers: { Authorization: `Bearer ${await accessToken(sa)}` },
+    };
+  }
+  const key = process.env.GEMINI_API_KEY;
+  if (!key) throw new Error('Neither GOOGLE_SA_KEY_B64 nor GEMINI_API_KEY is set');
+  return { url: `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${key}`, headers: {} };
+}
 
 type Schema = Record<string, unknown>;
 type Thinking = 'minimal' | 'low' | 'medium' | 'high';
@@ -24,11 +43,10 @@ async function generateJson<T>(prompt: string, schema: Schema, thinking: Thinkin
 }
 
 async function generateOnce<T>(prompt: string, schema: Schema, thinking: Thinking): Promise<T> {
-  const key = process.env.GEMINI_API_KEY;
-  if (!key) throw new Error('GEMINI_API_KEY is not set');
-  const res = await fetch(`${ENDPOINT}/${MODEL}:generateContent?key=${key}`, {
+  const { url, headers } = await endpoint();
+  const res = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...headers },
     body: JSON.stringify({
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
       generationConfig: {
@@ -90,7 +108,7 @@ Below are open-source issues where a maintainer labelled the issue "help wanted"
 For each pick write:
 - asking: one plain sentence saying what the maintainer actually wants done, as you would explain it to a friend. No jargon the issue did not use.
 - whyYou: one sentence, second person, naming the specific skill of theirs that fits. No flattery.
-- reply: the first comment they would post on the issue. 40 to 110 words. Plain, warm, human. Open by acknowledging the specific ask. Offer one concrete first step (a question that unblocks, a pointer, or one small piece). Never promise the whole thing, a pull request, or a timeline: "this week", "I'll open a PR" and "once clarified" are out. No emoji, no "I'd love to", no "not just X but Y", no bullet lists. It must read as if written by a person who read the issue, not by an assistant.
+- reply: the first comment they would post on the issue. 40 to 110 words. Plain, warm, human. Open with the specific detail that shows they read the issue, never with a formula: "I see you want", "I noticed", "A good first step would be" and "Happy to help" are banned, and no two replies may open the same way. Offer one concrete first step (a question that unblocks, a pointer, or one small piece). Never promise the whole thing, a pull request, or a timeline: "this week", "I'll open a PR" and "once clarified" are out. No emoji, no "I'd love to", no "not just X but Y", no bullet lists. It must read as if written by a person who read the issue, not by an assistant.
 
 ${list}`,
     {

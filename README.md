@@ -22,7 +22,9 @@ Built in a weekend for the [DEV Weekend Challenge: Generosity Edition](https://d
    result came back as issue #30 until we noticed.)
 2. Your words map to one or two GitHub languages with a keyword table. Gemini
    (`gemini-3.6-flash`, minimal thinking, about a second) steps in only when the
-   table draws a blank.
+   table draws a blank. The model is reached through Vertex AI with a service
+   account (token minted by hand with `node:crypto`, no SDK) or, failing that,
+   through the Gemini API with a key.
 3. Gemini reads the asks, keeps the ones you could genuinely move, says what
    each maintainer wants in plain words, why it is you, and drafts the first
    comment: acknowledge the specific ask, offer one concrete step, promise
@@ -38,7 +40,7 @@ The same words get the same picks for a day, so a shared link such as
 
 ```bash
 pnpm install
-cp .env.example .env     # GEMINI_API_KEY (free tier is enough), optional GITHUB_TOKEN
+cp .env.example .env     # a Vertex service account (or GEMINI_API_KEY on the free tier), optional GITHUB_TOKEN
 pnpm dev                 # http://localhost:3000
 pnpm test
 ```
