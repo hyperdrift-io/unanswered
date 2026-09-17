@@ -39,10 +39,10 @@ The same words get the same picks for a day, so a shared link such as
 ## Run it
 
 ```bash
-pnpm install
+npm install
 cp .env.example .env     # a Vertex service account (or GEMINI_API_KEY on the free tier), optional GITHUB_TOKEN
-pnpm dev                 # http://localhost:3000
-pnpm test
+npm run dev              # http://localhost:3000
+npm test
 ```
 
 ## For agents: the MCP server
@@ -50,7 +50,7 @@ pnpm test
 The same two acts, for Claude, ChatGPT or any MCP client:
 
 ```bash
-pnpm mcp
+npm run mcp
 ```
 
 Tools: `find_unanswered_asks(what_you_know, max)` and

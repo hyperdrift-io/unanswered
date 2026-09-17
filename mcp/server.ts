@@ -1,7 +1,7 @@
 // MCP server over stdio. The same two acts as the page, for any agent:
 // find the asks this person can answer, draft the first reply. Nothing posts.
 //
-//   pnpm mcp            (needs GEMINI_API_KEY, optional GITHUB_TOKEN in .env)
+//   npm run mcp        (needs GEMINI_API_KEY, optional GITHUB_TOKEN in .env)
 //
 // Claude Desktop / Claude Code config:
 //   { "mcpServers": { "unanswered": { "command": "node",

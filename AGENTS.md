@@ -19,15 +19,16 @@ unanswered finds open-source asks nobody answered — maintainer-opened `help wa
 - GitHub issue search in `src/lib/github.ts`; ask selection in `src/lib/asks.ts`; keyword → language mapping in `src/lib/languages.ts`
 - Gemini through Vertex AI with a service account (`src/lib/google-auth.ts`, token minted with `node:crypto`, no SDK), falling back to the Gemini API key (`src/lib/gemini.ts`)
 - MCP server in `mcp/server.ts`; health route `src/pages/_api/health.ts`
-- pnpm today — npm migration debt: migrate the full package-manager contract before dependency-changing work (root `AGENTS.md` → Package Manager Standard)
+- npm (`package-lock.json`), per root `AGENTS.md` → Package Manager Standard; `.npmrc` keeps the 3-day `min-release-age` supply-chain guard
 
 ## Commands
 
 ```bash
-pnpm dev     # Waku dev server
-pnpm test    # node --test on src/lib/*.test.ts
-pnpm build   # waku build
-pnpm mcp     # MCP server (reads .env)
+npm run dev         # Waku dev server
+npm test            # node --test on src/lib/*.test.ts
+npm run type-check  # tsc --noEmit
+npm run build       # waku build
+npm run mcp         # MCP server (reads .env)
 ```
 
 Production runs `node --env-file=.env dist/serve-node.js`; secrets live in the infra vault (`infra/secrets/unanswered.env.prod`).

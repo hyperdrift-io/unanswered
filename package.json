@@ -11,7 +11,8 @@
     "start": "waku start --port ${PORT:-8080} --host ${HOST:-127.0.0.1}",
     "mcp": "node --env-file=.env --experimental-strip-types mcp/server.ts",
     "test": "node --test --experimental-strip-types src/lib/*.test.ts",
-    "typegen": "waku router typegen"
+    "typegen": "waku router typegen",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.20.0",
@@ -19,7 +20,7 @@
     "react": "~19.2.6",
     "react-dom": "~19.2.6",
     "react-server-dom-webpack": "~19.2.6",
-    "waku": "1.0.0-beta.4",
+    "waku": "1.0.0-rc.0",
     "zod": "^3.25.0"
   },
   "devDependencies": {
@@ -30,5 +31,6 @@
     "@vitejs/plugin-react": "^6.0.1",
     "babel-plugin-react-compiler": "^1.0.0",
     "typescript": "^6.0.3"
-  }
+  },
+  "packageManager": "npm@11.19.1"
 }
