@@ -1,0 +1,8 @@
+# unanswered
+
+> Finds open-source asks nobody answered: help-wanted issues opened by a maintainer, with no assignee and no comments, three weeks to a year old. It matches them to what you know and drafts a first reply. You read it, edit it and post it yourself; nothing is posted for you.
+
+## Pages
+
+- [unanswered](https://unanswered.hyperdrift.io/): say what you know, get the asks you could move forward, each with a drafted first comment; the page also explains how asks are picked
+- [Source and README](https://github.com/hyperdrift-io/unanswered): the GitHub search behind it, where Gemini steps in, and the MCP server with `find_unanswered_asks` and `draft_first_reply`
