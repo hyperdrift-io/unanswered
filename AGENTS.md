@@ -1,8 +1,6 @@
 # unanswered
 
-> **Inherits**: [Hyperdrift workspace AGENTS.md](../../../AGENTS.md) (`~/dev/hyperdrift/AGENTS.md`). Read it first; this file adds unanswered-specific context only.
->
-> **Voice Covenant**: every user-facing surface, including drafted replies, inherits `meta/PHILOSOPHY.md` #8 "Speak to Enable" — enable, never diminish; strengths first.
+> Inherits `~/dev/hyperdrift/AGENTS.md`.
 
 ## Overview
 
@@ -19,7 +17,7 @@ unanswered finds open-source asks nobody answered — maintainer-opened `help wa
 - GitHub issue search in `src/lib/github.ts`; ask selection in `src/lib/asks.ts`; keyword → language mapping in `src/lib/languages.ts`
 - Gemini through Vertex AI with a service account (`src/lib/google-auth.ts`, token minted with `node:crypto`, no SDK), falling back to the Gemini API key (`src/lib/gemini.ts`)
 - MCP server in `mcp/server.ts`; health route `src/pages/_api/health.ts`
-- npm (`package-lock.json`), per root `AGENTS.md` → Package Manager Standard; `.npmrc` keeps the 3-day `min-release-age` supply-chain guard
+- npm (`package-lock.json`); `.npmrc` keeps the 3-day `min-release-age` supply-chain guard
 
 ## Commands
 
